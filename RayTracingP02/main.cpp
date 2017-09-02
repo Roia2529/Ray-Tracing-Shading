@@ -41,9 +41,15 @@ pixelIterator pIt;
 
 bool Trace(const Ray &ray, HitInfo &hitinfo);
 bool TraceNode(const Node &node, const Ray &ray, HitInfo &hitinfo);
-void setPixelblack(int index);
-void setPixelwhite(int index, const HitInfo hinfo);
-void RenderPixel(pixelIterator &it);
+
+void setPixelColor(int index, const HitInfo hinfo, Color shade){
+    Color24* color_pixel = renderImage.GetPixels();
+    color_pixel[index]=(Color24)shade;
+    
+    float* zb_pixel = renderImage.GetZBuffer();
+    *(zb_pixel+ index) = hinfo.z;
+    
+}
 
 void RenderPixel(pixelIterator &it){
     int x,y;
@@ -77,14 +83,10 @@ void RenderPixel(pixelIterator &it){
         hitinfo.Init();
         
         if(rootNode.GetNumChild()>0){
-            //Color24* color_pixel = renderImage.GetPixels();
-            
+   
             if(Trace(ray_pixel,hitinfo)){
                 //set color
-                setPixelwhite(y*camera.imgWidth+x,hitinfo);
-            }
-            else{
-                setPixelblack(y*camera.imgWidth+x);
+                setPixelColor(y*camera.imgWidth+x,hitinfo,hitinfo.node->GetMaterial()->Shade(ray_pixel, hitinfo, lights));
             }
             renderImage.IncrementNumRenderPixel(1);
         }
@@ -92,7 +94,43 @@ void RenderPixel(pixelIterator &it){
 }
 
 Color MtlBlinn::Shade(const Ray &ray, const HitInfo &hInfo, const LightList &lights) const{
-    return Color(255.0);
+    //Color shade_color(255.0);
+    Color ambient_color(0.0);
+    Color diffuse_color(0.0);
+    Point3 N = hInfo.N;
+    Point3 P = hInfo.p;
+
+    const Material *material;
+    material = hInfo.node->GetMaterial();
+
+    const MtlBlinn* mtlb =static_cast<const MtlBlinn*>(material);
+    Color Kd = mtlb->diffuse;
+    Color Ks = mtlb->specular;
+    float alpha = mtlb->glossiness;
+
+    for(int i=0; i<lights.size(); i++){
+        //ambient light
+        if(lights[i]->IsAmbient()){
+           ambient_color += lights[i]->Illuminate(P,N)*Kd;
+        }
+        else{
+            Color I_i = lights[i]->Illuminate(P,N);
+            Point3 L = -1*(lights[i]->Direction(P));
+            Point3 V = camera.pos - hInfo.p;
+            V.Normalize();
+            Point3 LpV = L+V;
+            Point3 H = LpV/LpV.Length();
+            H.Normalize();
+
+            Color kse = Ks*pow(N.Dot(H),alpha)+Kd;
+            //cout<<"L.length: "<<L.Length()<<", N.l: "<<N.Length()<<endl;
+            float theta = N.Dot(L);
+            //
+            diffuse_color += I_i*(theta>0?theta:0)*kse;
+        }
+    }
+
+    return ambient_color+diffuse_color;
 }
 
 bool Sphere::IntersectRay( const Ray &ray, HitInfo &hitinfo, int hitSide ) const{
@@ -134,6 +172,7 @@ bool TraceNode(const Node &node,const Ray &ray, HitInfo &hitinfo){
 		if(obj->IntersectRay(r,hitinfo)){
 			hit = true;
 			hitinfo.node = &node;
+            node.FromNodeCoords(hitinfo);
 		}
 	}
 	for(int i=0;i<node.GetNumChild();i++){
@@ -144,7 +183,7 @@ bool TraceNode(const Node &node,const Ray &ray, HitInfo &hitinfo){
 	}
     return hit;
 }
-
+/*
 void setPixelblack(int index){
 	Color24* color_pixel = renderImage.GetPixels();
     (color_pixel+ index)->r=0;
@@ -155,17 +194,9 @@ void setPixelblack(int index){
     zb_pixel[index] = BIGFLOAT;
     		
 }	
+*/
 
-void setPixelwhite(int index, const HitInfo hinfo){
-	Color24* color_pixel = renderImage.GetPixels();
-    (color_pixel+ index)->r=255;
-    (color_pixel+ index)->g=255;
-    (color_pixel+ index)->b=255;
-    
-    float* zb_pixel = renderImage.GetZBuffer();
-    *(zb_pixel+ index) = hinfo.z;
-    	
-}
+
 void BeginRender()
 {	
 	cout<<"call by GlutKeyboard() in viewport.cpp\n";

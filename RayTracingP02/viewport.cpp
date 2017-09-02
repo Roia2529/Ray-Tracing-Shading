@@ -109,6 +109,8 @@ void ShowViewport()
     
     float zero[] = {0,0,0,0};
     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, zero );
+    //Local or Infinite Viewpoint
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
     
     glEnable(GL_NORMALIZE);
     

@@ -23,6 +23,9 @@ Sphere theSphere;
 MaterialList materials;
 LightList lights;
 
+//if not hit
+Color black(0.0);
+
 class pixelIterator{
 private:
     atomic<int> ix;
@@ -42,12 +45,12 @@ pixelIterator pIt;
 bool Trace(const Ray &ray, HitInfo &hitinfo);
 bool TraceNode(const Node &node, const Ray &ray, HitInfo &hitinfo);
 
-void setPixelColor(int index, const HitInfo hinfo, Color shade){
+void setPixelColor(int index, float z, Color shade){
     Color24* color_pixel = renderImage.GetPixels();
     color_pixel[index]=(Color24)shade;
     
     float* zb_pixel = renderImage.GetZBuffer();
-    *(zb_pixel+ index) = hinfo.z;
+    *(zb_pixel+ index) = z;
     
 }
 
@@ -83,10 +86,14 @@ void RenderPixel(pixelIterator &it){
         hitinfo.Init();
         
         if(rootNode.GetNumChild()>0){
-   
+            
+            int index = y*camera.imgWidth+x;
             if(Trace(ray_pixel,hitinfo)){
                 //set color
-                setPixelColor(y*camera.imgWidth+x,hitinfo,hitinfo.node->GetMaterial()->Shade(ray_pixel, hitinfo, lights));
+                setPixelColor(index,hitinfo.z,hitinfo.node->GetMaterial()->Shade(ray_pixel, hitinfo, lights));
+            }
+            else{
+                setPixelColor(index,BIGFLOAT,black);
             }
             renderImage.IncrementNumRenderPixel(1);
         }
@@ -134,7 +141,7 @@ Color MtlBlinn::Shade(const Ray &ray, const HitInfo &hInfo, const LightList &lig
 }
 
 bool Sphere::IntersectRay( const Ray &ray, HitInfo &hitinfo, int hitSide ) const{
-	//float raidus = 1;
+	bool behitted = false;
 	float a = ray.dir.Dot(ray.dir);
 	float c = ray.p.Dot(ray.p)-1;
 	float b = 2*ray.p.Dot(ray.dir);
@@ -147,15 +154,19 @@ bool Sphere::IntersectRay( const Ray &ray, HitInfo &hitinfo, int hitSide ) const
         hitinfo.z = min(t1,t2);
         if(hitinfo.z<0)
         	return false;
-        else if(hitinfo.z < prez)
-         	return true;
-        else hitinfo.z=prez;
+        else if(hitinfo.z>=prez){
+            hitinfo.z = prez;
+            return false;
+        }
+        else
+         	behitted = true;
         
         hitinfo.p = hitinfo.z*ray.dir+ray.p;
         hitinfo.N = hitinfo.p;
+        //hitinfo.N.Normalize();
 	}
 
-	return false;
+	return behitted;
 }
 
 bool Trace(const Ray &ray, HitInfo &hitinfo){
@@ -175,6 +186,7 @@ bool TraceNode(const Node &node,const Ray &ray, HitInfo &hitinfo){
             node.FromNodeCoords(hitinfo);
 		}
 	}
+    
 	for(int i=0;i<node.GetNumChild();i++){
 		const Node &child = *node.GetChild(i);
 		if(TraceNode(child,r,hitinfo)){
@@ -183,24 +195,13 @@ bool TraceNode(const Node &node,const Ray &ray, HitInfo &hitinfo){
 	}
     return hit;
 }
-/*
-void setPixelblack(int index){
-	Color24* color_pixel = renderImage.GetPixels();
-    (color_pixel+ index)->r=0;
-    (color_pixel+ index)->g=0;
-    (color_pixel+ index)->b=0;
-    float* zb_pixel = renderImage.GetZBuffer();
-    //cout<< "index: "<<index<<"\n";
-    zb_pixel[index] = BIGFLOAT;
-    		
-}	
-*/
 
 
 void BeginRender()
 {	
 	cout<<"call by GlutKeyboard() in viewport.cpp\n";
-	
+	//renderImage.SaveImage("/Users/hsuanlee/Documents/Cpp/RayTracingP02/RayTracingP02/prj2input.png");
+    
     unsigned num_thread = thread::hardware_concurrency();
     vector<thread> thr;
     for(int j=0;j<num_thread;j++){
@@ -215,7 +216,8 @@ void BeginRender()
     
     cout << "Saving z-buffer image...\n";
     renderImage.ComputeZBufferImage();
-    renderImage.SaveZImage("/Users/hsuanlee/Documents/Cpp/RayTracingP02/RayTracingP02/prj2.png");
+    //renderImage.SaveZImage("/Users/hsuanlee/Documents/Cpp/RayTracingP02/RayTracingP02/prj2.png");
+    renderImage.SaveImage("/Users/hsuanlee/Documents/Cpp/RayTracingP02/RayTracingP02/prj2img.png");
 }
 
 void StopRender(){

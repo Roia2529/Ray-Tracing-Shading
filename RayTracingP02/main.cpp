@@ -47,6 +47,9 @@ bool TraceNode(const Node &node, const Ray &ray, HitInfo &hitinfo);
 
 void setPixelColor(int index, float z, Color shade){
     Color24* color_pixel = renderImage.GetPixels();
+    //Color24* c = (color_pixel+index);
+    //c->SetBlack();
+    //*(color_pixel+index)->SetBlack();
     color_pixel[index]=(Color24)shade;
     
     float* zb_pixel = renderImage.GetZBuffer();
@@ -190,6 +193,7 @@ bool TraceNode(const Node &node,const Ray &ray, HitInfo &hitinfo){
 	for(int i=0;i<node.GetNumChild();i++){
 		const Node &child = *node.GetChild(i);
 		if(TraceNode(child,r,hitinfo)){
+            node.FromNodeCoords(hitinfo);
 			hit = true;
 		}
 	}

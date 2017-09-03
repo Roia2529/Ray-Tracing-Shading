@@ -57,7 +57,6 @@
 		F23CC8AF1F4E756A00630365 /* utf8testverify.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = utf8testverify.xml; sourceTree = "<group>"; };
 		F23CC8B01F4E756A00630365 /* xmltest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmltest.cpp; sourceTree = "<group>"; };
 		F23CC8B21F4E756A00630365 /* xmlload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xmlload.cpp; path = ../RayTracingP02/xmlload.cpp; sourceTree = "<group>"; };
-		F23CC8BD1F4E7A7200630365 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../RayTracingP02/README.md; sourceTree = "<group>"; };
 		F23CC8C11F50A7E000630365 /* viewport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = viewport.cpp; path = ../RayTracingP02/viewport.cpp; sourceTree = "<group>"; };
 		F25F564C1F58A494005AAA86 /* cyColor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cyColor.h; sourceTree = "<group>"; };
 		F25F564D1F58CC92005AAA86 /* materials.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = materials.h; sourceTree = "<group>"; };
@@ -100,7 +99,6 @@
 			children = (
 				F23CC8BE1F4FA72000630365 /* xml */,
 				F23CC7AE1F4E740900630365 /* main.cpp */,
-				F23CC8BD1F4E7A7200630365 /* README.md */,
 				F23CC83D1F4E756A00630365 /* include */,
 				F23CC84A1F4E756A00630365 /* tinyxml */,
 				F23CC8B21F4E756A00630365 /* xmlload.cpp */,
